@@ -267,4 +267,35 @@ class MixerViewModel(private val context: Application) : ViewModel() {
             Toast.makeText(context, "slot was not removed", Toast.LENGTH_SHORT).show()
         }
     }
+
+    fun changeSource() {
+        val backCamera = BroadcastSession.listAvailableDevices(context).filter {
+            it.position == Device.Descriptor.Position.BACK && it.type == Device.Descriptor.DeviceType.CAMERA
+        }[0]
+        session?.detachDevice(backCamera)
+        val frontCamera = BroadcastSession.listAvailableDevices(context).filter {
+            it.position == Device.Descriptor.Position.FRONT && it.type == Device.Descriptor.DeviceType.CAMERA
+        }[0]
+        frontCamera?.let {
+            // Then, we attach the front camera and on completion, bind it to the camera slot.
+            // Note that bindToPreference is FALSE, which gives us full control over binding the device to the slot. This also means
+            // that we are responsible for binding the device to a slot once the device is attached.
+            // (When bindToPreference is TRUE, as part of attaching the device, the broadcast session will also try to bind the device to a
+            // slot with a matching type preference.)
+            session!!.attachDevice(frontCamera, false) {
+                val success: Boolean = session!!.mixer?.bind(it, CAMERA_SLOT_NAME) == true
+
+                // Error-checking. The most common source of this error is that there is no slot
+                // with the name provided.
+                if (!success) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.error_failed_to_bind_to_slot),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            }
+        }
+    }
 }

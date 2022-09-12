@@ -29,4 +29,12 @@
         android:layout_height="wrap_content"
         android:text="remove slot" />
 
+    <Button
+        android:padding="24dp"
+        android:id="@+id/change_source"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="change source" />
+
+
 </LinearLayout>

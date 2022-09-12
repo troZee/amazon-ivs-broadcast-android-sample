@@ -49,6 +49,10 @@ class MixerActivity : PermissionActivity() {
         binding.addSlot.setOnClickListener {
             viewModel.addSlot()
         }
+
+        binding.changeSource.setOnClickListener {
+            viewModel.changeSource();
+        }
         binding.removeSlot.setOnClickListener {
             viewModel.removeSlot();
         }
