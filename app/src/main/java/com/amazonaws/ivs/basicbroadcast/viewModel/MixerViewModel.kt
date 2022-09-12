@@ -38,9 +38,14 @@ class MixerViewModel(private val context: Application) : ViewModel() {
         val bigSize: BroadcastConfiguration.Vec2 = BroadcastConfiguration.Vec2(1280f, 720f)
         val smallSize: BroadcastConfiguration.Vec2 = BroadcastConfiguration.Vec2(320f, 180f)
         val bigPosition: BroadcastConfiguration.Vec2 = BroadcastConfiguration.Vec2(0f, 0f)
-        val smallPositionBottomLeft: BroadcastConfiguration.Vec2 = BroadcastConfiguration.Vec2(borderWidth, bigSize.y - smallSize.y - borderWidth)
-        val smallPositionTopRight: BroadcastConfiguration.Vec2 = BroadcastConfiguration.Vec2(bigSize.x - smallSize.x - borderWidth, borderWidth)
-        val smallPositionBottomRight: BroadcastConfiguration.Vec2 = BroadcastConfiguration.Vec2(bigSize.x - smallSize.x - borderWidth, bigSize.y - smallSize.y - borderWidth)
+        val smallPositionBottomLeft: BroadcastConfiguration.Vec2 =
+            BroadcastConfiguration.Vec2(borderWidth, bigSize.y - smallSize.y - borderWidth)
+        val smallPositionTopRight: BroadcastConfiguration.Vec2 =
+            BroadcastConfiguration.Vec2(bigSize.x - smallSize.x - borderWidth, borderWidth)
+        val smallPositionBottomRight: BroadcastConfiguration.Vec2 = BroadcastConfiguration.Vec2(
+            bigSize.x - smallSize.x - borderWidth,
+            bigSize.y - smallSize.y - borderWidth
+        )
     }
 
     /**
@@ -68,7 +73,7 @@ class MixerViewModel(private val context: Application) : ViewModel() {
             }
 
             // This slot will hold custom content (in this example, a looping mp4 file) and take up the entire stream. It will move during the transition.
-            contentSlot  = BroadcastConfiguration.Mixer.Slot.with {
+            contentSlot = BroadcastConfiguration.Mixer.Slot.with {
                 it.size = bigSize
                 it.position = bigPosition
                 it.setzIndex(1)
@@ -77,18 +82,7 @@ class MixerViewModel(private val context: Application) : ViewModel() {
                 return@with it
             }
 
-            // This slot will be a logo-based watermark and sit in the bottom right corner of the stream. It will not move around.
-            logoSlot  = BroadcastConfiguration.Mixer.Slot.with {
-                it.size = BroadcastConfiguration.Vec2(smallSize.y, smallSize.y) // 1:1 aspect
-                it.position = BroadcastConfiguration.Vec2(bigSize.x - smallSize.y - borderWidth, smallPositionBottomRight.y)
-                it.setzIndex(3)
-                it.transparency = 0.3f
-                it.name = LOGO_SLOT_NAME
-
-                return@with it
-            }
-
-            this.mixer.slots = arrayOf(cameraSlot, contentSlot, logoSlot)
+            this.mixer.slots = arrayOf(cameraSlot, contentSlot)
         }
 
         BroadcastSession(context, null, config, null).apply {
@@ -96,7 +90,11 @@ class MixerViewModel(private val context: Application) : ViewModel() {
             Log.d(TAG, "Broadcast session ready: $isReady")
             if (!isReady) {
                 Log.d(TAG, "Broadcast session not ready")
-                Toast.makeText(context, context.getString(R.string.error_create_session), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.error_create_session),
+                    Toast.LENGTH_SHORT
+                ).show()
                 return
             }
 
@@ -118,7 +116,11 @@ class MixerViewModel(private val context: Application) : ViewModel() {
                     // Error-checking. The most common source of this error is that there is no slot
                     // with the name provided.
                     if (!success) {
-                        Toast.makeText(context, context.getString(R.string.error_failed_to_bind_to_slot), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.error_failed_to_bind_to_slot),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
 
                 }
@@ -137,7 +139,11 @@ class MixerViewModel(private val context: Application) : ViewModel() {
                 // Error-checking. The most common source of this error is that there is no slot
                 // with the name provided.
                 if (!success) {
-                    Toast.makeText(context, context.getString(R.string.error_failed_to_bind_to_slot), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.error_failed_to_bind_to_slot),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
@@ -155,12 +161,17 @@ class MixerViewModel(private val context: Application) : ViewModel() {
             }
             // Bind it to the content slot.
             this.awaitDeviceChanges {
-                val success: Boolean = this.mixer?.bind(contentSurfaceSource, CONTENT_SLOT_NAME) == true
+                val success: Boolean =
+                    this.mixer?.bind(contentSurfaceSource, CONTENT_SLOT_NAME) == true
 
                 // Error-checking. The most common source of this error is that there is no slot
                 // with the name provided.
                 if (!success) {
-                    Toast.makeText(context, context.getString(R.string.error_failed_to_bind_to_slot), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.error_failed_to_bind_to_slot),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
@@ -224,6 +235,33 @@ class MixerViewModel(private val context: Application) : ViewModel() {
             )
             clearPreview.value = true
             preview.value = this
+        }
+    }
+
+    fun addSlot() {
+        logoSlot = BroadcastConfiguration.Mixer.Slot.with {
+            it.size = BroadcastConfiguration.Vec2(smallSize.y, smallSize.y) // 1:1 aspect
+            it.position = BroadcastConfiguration.Vec2(
+                bigSize.x - smallSize.y - borderWidth,
+                smallPositionBottomRight.y
+            )
+            it.setzIndex(3)
+            it.transparency = 0.3f
+            it.name = LOGO_SLOT_NAME
+
+            return@with it
+        }
+        val result = this.session?.mixer?.addSlot(logoSlot)
+        if (result != true) {
+            Toast.makeText(context, "logo was not added", Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    fun removeSlot() {
+        val result = this.session?.mixer?.removeSlot(CAMERA_SLOT_NAME)
+        if (result != true) {
+            Toast.makeText(context, "slot was not removed", Toast.LENGTH_SHORT).show()
         }
     }
 }

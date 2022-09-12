@@ -46,6 +46,12 @@ class MixerActivity : PermissionActivity() {
             viewModel.swapSlots()
         }
 
+        binding.addSlot.setOnClickListener {
+            viewModel.addSlot()
+        }
+        binding.removeSlot.setOnClickListener {
+            viewModel.removeSlot();
+        }
         val logo = loadLogo()
         val content = loadContentUri()
 
