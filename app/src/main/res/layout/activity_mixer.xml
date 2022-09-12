@@ -1,31 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:keepScreenOn="true"
+
     android:orientation="vertical"
     tools:context=".activities.MixerActivity">
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/preview_view"
         android:layout_width="267dp"
         android:layout_height="100dp"
-
         android:background="@color/colorGreen"
         android:orientation="vertical" />
 
     <Button
+        android:padding="24dp"
         android:id="@+id/add_slot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="add slot"/>
+        android:text="add slot" />
 
     <Button
+        android:padding="24dp"
         android:id="@+id/remove_slot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="remove slot"/>
+        android:text="remove slot" />
 
 </LinearLayout>

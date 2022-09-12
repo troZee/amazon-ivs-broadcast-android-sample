@@ -17,6 +17,7 @@ private const val TAG = "AmazonIVS"
 
 class MixerViewModel(private val context: Application) : ViewModel() {
 
+    private lateinit var logo: Bitmap
     var session: BroadcastSession? = null
     var player: MediaPlayer? = null
 
@@ -53,6 +54,7 @@ class MixerViewModel(private val context: Application) : ViewModel() {
      */
     fun createSession(logo: Bitmap, content: Uri) {
         session?.release()
+        this.logo = logo
 
         // Create a custom configuration at 720p60.
         val config = BroadcastConfiguration().apply {
@@ -101,16 +103,16 @@ class MixerViewModel(private val context: Application) : ViewModel() {
             // Attach devices to each slot manually based on the slot names.
 
             // Find the first front camera.
-            val frontCamera = BroadcastSession.listAvailableDevices(context).filter {
-                it.position == Device.Descriptor.Position.FRONT && it.type == Device.Descriptor.DeviceType.CAMERA
+            val backCamera = BroadcastSession.listAvailableDevices(context).filter {
+                it.position == Device.Descriptor.Position.BACK && it.type == Device.Descriptor.DeviceType.CAMERA
             }[0]
-            frontCamera?.let {
+            backCamera?.let {
                 // Then, we attach the front camera and on completion, bind it to the camera slot.
                 // Note that bindToPreference is FALSE, which gives us full control over binding the device to the slot. This also means
                 // that we are responsible for binding the device to a slot once the device is attached.
                 // (When bindToPreference is TRUE, as part of attaching the device, the broadcast session will also try to bind the device to a
                 // slot with a matching type preference.)
-                this.attachDevice(frontCamera, false) {
+                this.attachDevice(backCamera, false) {
                     val success: Boolean = this.mixer?.bind(it, CAMERA_SLOT_NAME) == true
 
                     // Error-checking. The most common source of this error is that there is no slot
@@ -123,27 +125,6 @@ class MixerViewModel(private val context: Application) : ViewModel() {
                         ).show()
                     }
 
-                }
-            }
-
-            // Second, create a custom image input source for the logo.
-            val logoSurfaceSource = this.createImageInputSource()
-            val logoSurface = logoSurfaceSource.inputSurface
-            val canvas = logoSurface.lockCanvas(null)
-            canvas.drawBitmap(logo, 0f, 0f, null)
-            logoSurface.unlockCanvasAndPost(canvas)
-            // Bind it to the logo slot.
-            this.awaitDeviceChanges {
-                val success: Boolean = this.mixer?.bind(logoSurfaceSource, LOGO_SLOT_NAME) == true
-
-                // Error-checking. The most common source of this error is that there is no slot
-                // with the name provided.
-                if (!success) {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.error_failed_to_bind_to_slot),
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
 
@@ -239,6 +220,8 @@ class MixerViewModel(private val context: Application) : ViewModel() {
     }
 
     fun addSlot() {
+        if(session == null) return
+
         logoSlot = BroadcastConfiguration.Mixer.Slot.with {
             it.size = BroadcastConfiguration.Vec2(smallSize.y, smallSize.y) // 1:1 aspect
             it.position = BroadcastConfiguration.Vec2(
@@ -254,6 +237,26 @@ class MixerViewModel(private val context: Application) : ViewModel() {
         val result = this.session?.mixer?.addSlot(logoSlot)
         if (result != true) {
             Toast.makeText(context, "logo was not added", Toast.LENGTH_SHORT).show()
+        }
+        // Second, create a custom image input source for the logo.
+        val logoSurfaceSource = session!!.createImageInputSource()
+        val logoSurface = logoSurfaceSource.inputSurface
+        val canvas = logoSurface.lockCanvas(null)
+        canvas.drawBitmap(logo, 0f, 0f, null)
+        logoSurface.unlockCanvasAndPost(canvas)
+        // Bind it to the logo slot.
+        session!!.awaitDeviceChanges {
+            val success: Boolean = this.session!!.mixer?.bind(logoSurfaceSource, LOGO_SLOT_NAME) == true
+
+            // Error-checking. The most common source of this error is that there is no slot
+            // with the name provided.
+            if (!success) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.error_failed_to_bind_to_slot),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
 
     }
